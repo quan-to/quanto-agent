@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using QuantoAgent.Log;
@@ -10,6 +11,13 @@ namespace QuantoAgent {
                 int p = (int)Environment.OSVersion.Platform;
                 return (p == 4) || (p == 6) || (p == 128);
             }
+        }
+
+        internal static string GetAppLabel() {
+            var asm = Assembly.GetExecutingAssembly();
+            var fvi = FileVersionInfo.GetVersionInfo(asm.Location);
+
+            return $"QuantoAgent {fvi.FileVersion}";
         }
 
         internal static byte[] ReadFileFromAssembly(string filename) {

@@ -5,7 +5,7 @@ namespace QuantoAgent {
     class MainClass {
         public static void Main(string[] args) {
             Logger.GlobalEnableDebug = true;
-            Logger.Log("Starting QuantoAgent");
+            Logger.Log($"Starting {Tools.GetAppLabel()}");
 
 
             var httpServer = new Server(Configuration.HttpPort);

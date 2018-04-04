@@ -6,6 +6,7 @@ using QuantoAgent.Models;
 using System.Net.Http;
 using System.Threading.Tasks;
 using QuantoAgent.Log;
+using System.Reflection;
 
 namespace QuantoAgent.Web {
     public class Proxy {
@@ -33,6 +34,9 @@ namespace QuantoAgent.Web {
             Logger.Debug($"Received Proxy Request for server {serverUrl}");
 
             var httpContent = new StringContent(req.BodyData, Encoding.UTF8, "application/json");
+
+            httpContent.Headers.Add("X-Powered-By", Tools.GetAppLabel());
+
             var response = await client.PostAsync(serverUrl, httpContent);
             var result = await response.Content.ReadAsStringAsync();
 
