@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net;
 using System.Threading;
+using System.Threading.Tasks;
 using MimeTypes;
 using QuantoAgent.Log;
 using QuantoAgent.Models;
@@ -83,6 +84,12 @@ namespace QuantoAgent.Web {
         }
 
         RestResult ProcessHttpCalls(HttpListenerRequest request) {
+            var proc = AsyncProcess(request);
+            proc.Wait();
+            return proc.Result;
+        }
+
+        async Task<RestResult> AsyncProcess(HttpListenerRequest request) {
             string[] ePath = request.Url.AbsolutePath.Split(new char[] { '/' }, 2, StringSplitOptions.RemoveEmptyEntries);
             RestRequest req = new RestRequest(request);
             if (ePath.Length == 0) {
@@ -98,7 +105,7 @@ namespace QuantoAgent.Web {
 
             switch (app) {
                 case "graphiql": return graphiql.ProcessRequest(path, method, req);
-                case "graphql": return proxy.ProcessRequest(path, method, req);
+                case "graphql": return await proxy.ProcessRequest(path, method, req);
                 case "admin": return management.ProcessRequest(path, method, req);
                 default:
                     return new RestResult(new ErrorObject {

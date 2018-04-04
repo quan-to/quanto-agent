@@ -1,5 +1,4 @@
-﻿using System;
-using QuantoAgent.Log;
+﻿using QuantoAgent.Log;
 using QuantoAgent.Web;
 
 namespace QuantoAgent {

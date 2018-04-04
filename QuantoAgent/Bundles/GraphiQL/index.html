@@ -1,26 +1,43 @@
 <html>
   <head>
     <style>
-      body {
-        height: 100%;
-        margin: 0;
-        width: 100%;
-        overflow: hidden;
-      }
-      #graphiql {
-        height: 100vh;
-      }
+        body {
+            height: 100%;
+            margin: 0;
+            width: 100%;
+            overflow: hidden;
+        }
+        #graphiql {
+            height: 100vh;
+        }
+		#config {
+            height: 50px;
+			display: flex;
+			/* justify-content: center; */
+			align-items: center;
+			margin-left: 20px;
+			margin-right: 20px;
+        }
+		#serverUrl {
+            width: 300px;
+			margin-left: 20px;
+			margin-right: 20px;
+		}
     </style>
 
-    <script src="./es6-promise.auto.min.js"></script>
-    <script src="./fetch.min.js"></script>
-    <script src="./react.min.js"></script>
-    <script src="./react-dom.min.js"></script>
-    <link rel="stylesheet" href="./graphiql.css" />
-    <script src="./graphiql.js"></script>
+    <script src="/graphiql/es6-promise.auto.min.js"></script>
+    <script src="/graphiql/fetch.min.js"></script>
+    <script src="/graphiql/react.min.js"></script>
+    <script src="/graphiql/react-dom.min.js"></script>
+    <link rel="stylesheet" href="/graphiql/graphiql.css" />
+    <script src="/graphiql/graphiql.js"></script>
 
   </head>
   <body>
+    <div id="config">
+        Server URL: <input type="text" id="serverUrl" value="https://api.staging.contaquanto.com/all" onkeypress="refreshurl()"/>
+		<div id="loggedMsg">Not logged in</div>
+	</div>
     <div id="graphiql">Loading...</div>
     <script>
       var search = window.location.search;
@@ -64,12 +81,19 @@
         }).join('&');
         history.replaceState(null, null, newSearch);
       }
+
+	  function refreshurl() {
+		gphi.setState({"response": "", "schema": undefined});
+		gphi._fetchSchema();
+	  }   
+
       function graphQLFetcher(graphQLParams) {
         return fetch('/graphql', {
           method: 'post',
           headers: {
             'Accept': 'application/json',
             'Content-Type': 'application/json',
+			'serverUrl': document.getElementById('serverUrl').value,
           },
           body: JSON.stringify(graphQLParams),
           credentials: 'include',
@@ -83,7 +107,7 @@
           }
         });
       }
-      ReactDOM.render(
+      var gphi = ReactDOM.render(
         React.createElement(GraphiQL, {
           fetcher: graphQLFetcher,
           query: parameters.query,

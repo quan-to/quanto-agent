@@ -27,6 +27,7 @@ namespace QuantoAgent.Models {
         readonly string bodyData;
         readonly Uri url;
         readonly Uri urlReferrer;
+        readonly NameValueCollection headers;
 
         //
         // Summary:
@@ -180,6 +181,8 @@ namespace QuantoAgent.Models {
 
         public string BodyData { get { return bodyData; } }
 
+        public NameValueCollection Headers { get { return headers; } }
+
         public RestRequest(HttpListenerRequest request) {
             userAgent = request.UserAgent;
             userHostAddress = request.UserHostAddress;
@@ -200,6 +203,7 @@ namespace QuantoAgent.Models {
             keepAlive = request.KeepAlive;
             queryString = request.QueryString;
             rawUrl = request.RawUrl;
+            headers = request.Headers;
             if (request.HasEntityBody) {
                 using (System.IO.Stream body = request.InputStream) {
                     using (System.IO.StreamReader reader = new System.IO.StreamReader(body, request.ContentEncoding)) {
