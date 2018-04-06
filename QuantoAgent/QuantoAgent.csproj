@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\packages\SQLite.3.13.0\build\net45\SQLite.props" Condition="Exists('..\packages\SQLite.3.13.0\build\net45\SQLite.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
@@ -30,19 +31,35 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
-    <Reference Include="BouncyCastle.Crypto">
-      <HintPath>..\packages\Portable.BouncyCastle.1.8.1.4\lib\net40\BouncyCastle.Crypto.dll</HintPath>
-    </Reference>
-    <Reference Include="GraphQL">
-      <HintPath>..\packages\GraphQL.0.17.3\lib\net45\GraphQL.dll</HintPath>
-    </Reference>
-    <Reference Include="GraphQL-Parser">
-      <HintPath>..\packages\GraphQL-Parser.3.0.0\lib\net45\GraphQL-Parser.dll</HintPath>
-    </Reference>
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\packages\Newtonsoft.Json.11.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="System.Net.Http" />
+    <Reference Include="EntityFramework">
+      <HintPath>..\packages\EntityFramework.6.0.0\lib\net45\EntityFramework.dll</HintPath>
+    </Reference>
+    <Reference Include="EntityFramework.SqlServer">
+      <HintPath>..\packages\EntityFramework.6.0.0\lib\net45\EntityFramework.SqlServer.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Data.SQLite">
+      <HintPath>..\packages\System.Data.SQLite.Core.1.0.108.0\lib\net46\System.Data.SQLite.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Data.SQLite.EF6">
+      <HintPath>..\packages\System.Data.SQLite.EF6.1.0.108.0\lib\net46\System.Data.SQLite.EF6.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Data.SQLite.Linq">
+      <HintPath>..\packages\System.Data.SQLite.Linq.1.0.108.0\lib\net46\System.Data.SQLite.Linq.dll</HintPath>
+    </Reference>
+    <Reference Include="BCrypt.Net-Next">
+      <HintPath>..\packages\BCrypt.Net-Next.2.1.3\lib\net452\BCrypt.Net-Next.dll</HintPath>
+    </Reference>
+    <Reference Include="GraphQL-Parser">
+      <HintPath>..\packages\GraphQL-Parser.2.0.0\lib\net45\GraphQL-Parser.dll</HintPath>
+    </Reference>
+    <Reference Include="GraphQL">
+      <HintPath>..\packages\GraphQL.0.17.3\lib\net45\GraphQL.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Program.cs" />
@@ -64,9 +81,23 @@
     <Compile Include="Models\ErrorCodes.cs" />
     <Compile Include="Models\RestRequest.cs" />
     <Compile Include="Web\GraphiQL.cs" />
+    <Compile Include="Models\LoginToken.cs" />
+    <Compile Include="Database\DatabaseConfig.cs" />
+    <Compile Include="Database\DBConfig.cs" />
+    <Compile Include="SQLiteAsync.cs" />
+    <Compile Include="SQLite.cs" />
+    <Compile Include="Database\ConfigurationManager.cs" />
+    <Compile Include="Database\DBUser.cs" />
+    <Compile Include="Database\UserManager.cs" />
+    <Compile Include="Database\DBSession.cs" />
+    <Compile Include="Exceptions\UserAlreadyExists.cs" />
+    <Compile Include="Web\GQLSchema\ManagementSchema.cs" />
+    <Compile Include="Web\GQLSchema\ManagementQuery.cs" />
+    <Compile Include="Web\GQLSchema\ManagementMutation.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="app.config" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Web\" />
@@ -74,6 +105,9 @@
     <Folder Include="Models\" />
     <Folder Include="Bundles\" />
     <Folder Include="Bundles\GraphiQL\" />
+    <Folder Include="Database\" />
+    <Folder Include="Exceptions\" />
+    <Folder Include="Web\GQLSchema\" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Bundles\GraphiQL\index.html" />
@@ -86,4 +120,5 @@
     <EmbeddedResource Include="Bundles\GraphiQL\react-dom.min.js" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <Import Project="..\packages\System.Data.SQLite.Core.1.0.108.0\build\net46\System.Data.SQLite.Core.targets" Condition="Exists('..\packages\System.Data.SQLite.Core.1.0.108.0\build\net46\System.Data.SQLite.Core.targets')" />
 </Project>
