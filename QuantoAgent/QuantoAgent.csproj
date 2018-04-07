@@ -107,6 +107,7 @@
     <Compile Include="Models\SimpleContainer.cs" />
     <Compile Include="Models\ISimpleContainer.cs" />
     <Compile Include="Models\GraphQLBody.cs" />
+    <Compile Include="Models\GContext.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

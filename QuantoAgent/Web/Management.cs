@@ -27,13 +27,18 @@ namespace QuantoAgent.Web {
 
         public async Task<RestResult> ProcessRequest(string path, string method, RestRequest req) {
 
+            var context = new GContext {
+                Path = path,
+                Method = method,
+            };
+
             var body = JsonConvert.DeserializeObject<GraphQLBody>(req.BodyData);
             var execute = await executer.ExecuteAsync(_ => {
                 _.Schema = schema;
                 _.Query = body.query;
                 _.Root = null;
                 _.Inputs = body.VariableToInputs();
-                _.UserContext = null;
+                _.UserContext = context;
                 _.OperationName = body.operationName;
             });
 
