@@ -55,11 +55,21 @@
       <HintPath>..\packages\BCrypt.Net-Next.2.1.3\lib\net452\BCrypt.Net-Next.dll</HintPath>
     </Reference>
     <Reference Include="GraphQL-Parser">
-      <HintPath>..\packages\GraphQL-Parser.2.0.0\lib\net45\GraphQL-Parser.dll</HintPath>
+      <HintPath>..\packages\GraphQL-Parser.3.0.0\lib\net45\GraphQL-Parser.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reactive.Interfaces">
+      <HintPath>..\packages\System.Reactive.Interfaces.3.1.1\lib\net45\System.Reactive.Interfaces.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reactive.Core">
+      <HintPath>..\packages\System.Reactive.Core.3.1.1\lib\net46\System.Reactive.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reactive.Linq">
+      <HintPath>..\packages\System.Reactive.Linq.3.1.1\lib\net46\System.Reactive.Linq.dll</HintPath>
     </Reference>
     <Reference Include="GraphQL">
-      <HintPath>..\packages\GraphQL.0.17.3\lib\net45\GraphQL.dll</HintPath>
+      <HintPath>..\packages\GraphQL.2.0.0-alpha-870\lib\net45\GraphQL.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Program.cs" />
@@ -94,6 +104,9 @@
     <Compile Include="Web\GQLSchema\ManagementSchema.cs" />
     <Compile Include="Web\GQLSchema\ManagementQuery.cs" />
     <Compile Include="Web\GQLSchema\ManagementMutation.cs" />
+    <Compile Include="Models\SimpleContainer.cs" />
+    <Compile Include="Models\ISimpleContainer.cs" />
+    <Compile Include="Models\GraphQLBody.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

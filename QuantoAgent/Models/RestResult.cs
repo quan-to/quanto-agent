@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net;
 using System.Text;
+using Newtonsoft.Json;
 
 namespace QuantoAgent.Models {
     [Serializable]
@@ -37,6 +38,12 @@ namespace QuantoAgent.Models {
         public RestResult(string result, string contentType) : this() {
             this.result = Encoding.UTF8.GetBytes(result);
             this.contentType = contentType;
+        }
+
+        public RestResult(object result) : this() {
+            string data = JsonConvert.SerializeObject(result);
+            this.result = Encoding.UTF8.GetBytes(data);
+            this.contentType = MimeTypes.MimeTypeMap.JSON;
         }
 
         public RestResult(byte[] result, string contentType) : this() {

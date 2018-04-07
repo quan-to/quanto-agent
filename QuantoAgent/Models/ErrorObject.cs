@@ -2,11 +2,12 @@
 using Newtonsoft.Json;
 
 namespace QuantoAgent.Models {
-    class ErrorObjectQ {
+    public class ErrorObjectQ {
         public string errorCode { get; set; }
         public string errorField { get; set; }
         public string message { get; set; }
         public string errorData { get; set; }
+        public object locations { get; set; }
     }
 
     public class ErrorObject {
@@ -15,15 +16,20 @@ namespace QuantoAgent.Models {
         public string ErrorField { get; set; }
         public string Message { get; set; }
         public object ErrorData { get; set; }
+        public object Locations { get; set; }
 
         public string ToJSON() {
-            var e = new ErrorObjectQ {
+            return JsonConvert.SerializeObject(ToQ());
+        }
+
+        public ErrorObjectQ ToQ() {
+            return new ErrorObjectQ {
                 errorCode = ErrorCode,
                 errorField = ErrorField,
                 message = Message,
-                errorData = JsonConvert.SerializeObject(ErrorData),
+                errorData = ErrorData != null ? JsonConvert.SerializeObject(ErrorData) : null,
+                locations = Locations,
             };
-            return JsonConvert.SerializeObject(e);
         }
     }
 }

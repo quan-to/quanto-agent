@@ -17,7 +17,6 @@ namespace QuantoAgent.Database {
         void Init() {
             var x = conn.GetTableInfo("DBConfig");
             if (x.Count == 0) {
-                Logger.Log("DatabaseConfig", "Configuration database does not exists. Creating it");
                 conn.CreateTable<DBConfig>();
             }
         }

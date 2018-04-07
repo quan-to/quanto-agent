@@ -106,7 +106,7 @@ namespace QuantoAgent.Web {
             switch (app) {
                 case "graphiql": return graphiql.ProcessRequest(path, method, req);
                 case "graphql": return await proxy.ProcessRequest(path, method, req);
-                case "admin": return management.ProcessRequest(path, method, req);
+                case "admin": return await management.ProcessRequest(path, method, req);
                 default:
                     return new RestResult(new ErrorObject {
                         ErrorCode = ErrorCodes.NotFound,
