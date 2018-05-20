@@ -41,7 +41,10 @@ namespace QuantoAgent.Models {
         }
 
         public RestResult(object result) : this() {
-            string data = JsonConvert.SerializeObject(result);
+            string data = JsonConvert.SerializeObject(result, Newtonsoft.Json.Formatting.None,
+                            new JsonSerializerSettings {
+                                NullValueHandling = NullValueHandling.Ignore
+                            });
             this.result = Encoding.UTF8.GetBytes(data);
             this.contentType = MimeTypes.MimeTypeMap.JSON;
         }

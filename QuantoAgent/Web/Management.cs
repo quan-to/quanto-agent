@@ -50,12 +50,17 @@ namespace QuantoAgent.Web {
             if (gqlErrors?.Count > 0) {
                 var errors = new List<ErrorObjectQ>();
                 foreach (var err in gqlErrors) {
-                    errors.Add(new ErrorObject {
-                        ErrorCode = ErrorCodes.GraphQLError,
-                        Message = err.Message,
-                        Locations = err.Locations,
-                        ErrorField = "graphql",
-                    }.ToQ());
+                    if (err.GetBaseException().GetType() == typeof(ErrorObjectException)) {
+                        var baseErr = (ErrorObjectException)err.GetBaseException();
+                        errors.Add(baseErr.ToQ());
+                    } else {
+                        errors.Add(new ErrorObject {
+                            ErrorCode = ErrorCodes.GraphQLError,
+                            Message = err.Message,
+                            Locations = err.Locations,
+                            ErrorField = "graphql",
+                        }.ToQ());
+                    }
                 }
                 result.Add("errors", errors);
             }

@@ -29,13 +29,14 @@ namespace QuantoAgent.Database {
 
             var user = GetUser(username);
             if (user == null) {
-                conn.Insert(new DBUser { UserId = id, Name = name, Password = hashedPassword });
+                conn.Insert(new DBUser { UserId = id, UserName = username, Name = name, Password = hashedPassword });
             } else {
                 throw new UserAlreadyExists();
             }
+            conn.Commit();
         }
 
-        static DBUser CheckUser(string username, string password) {
+        public static DBUser CheckUser(string username, string password) {
             var user = GetUser(username);
             if (user == null) {
                 return null;
@@ -47,7 +48,7 @@ namespace QuantoAgent.Database {
             return BCrypt.Net.BCrypt.Verify(password, hash) ? user : null;
         }
 
-        static DBUser GetUser(string username) {
+        public static DBUser GetUser(string username) {
             var res = conn.Table<DBUser>().Where(a => a.UserName == username);
             return res.Count() > 0 ? res.First() : null;
         }

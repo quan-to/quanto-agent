@@ -108,6 +108,8 @@
     <Compile Include="Models\ISimpleContainer.cs" />
     <Compile Include="Models\GraphQLBody.cs" />
     <Compile Include="Models\GContext.cs" />
+    <Compile Include="Database\TokenManager.cs" />
+    <Compile Include="Models\Token.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

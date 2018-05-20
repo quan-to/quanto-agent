@@ -10,6 +10,24 @@ namespace QuantoAgent.Models {
         public object locations { get; set; }
     }
 
+    public class ErrorObjectException: Exception {
+        public string ErrorCode { get; set; }
+        public string ErrorField { get; set; }
+        public object ErrorData { get; set; }
+        public object Locations { get; set; }
+        public ErrorObjectException(string message) : base(message) {}
+
+        public ErrorObjectQ ToQ() {
+            return new ErrorObjectQ {
+                errorCode = ErrorCode,
+                errorField = ErrorField,
+                message = Message,
+                errorData = ErrorData != null ? JsonConvert.SerializeObject(ErrorData) : null,
+                locations = Locations,
+            };
+        }
+    }
+
     public class ErrorObject {
 
         public string ErrorCode { get; set; }
@@ -29,6 +47,15 @@ namespace QuantoAgent.Models {
                 message = Message,
                 errorData = ErrorData != null ? JsonConvert.SerializeObject(ErrorData) : null,
                 locations = Locations,
+            };
+        }
+
+        public Exception ToException() {
+            return new ErrorObjectException(this.Message) {
+                ErrorCode = ErrorCode,
+                ErrorField = ErrorField,
+                ErrorData = ErrorData,
+                Locations = Locations,
             };
         }
     }

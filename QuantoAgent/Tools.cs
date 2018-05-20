@@ -13,6 +13,14 @@ namespace QuantoAgent {
             }
         }
 
+        public static DateTime UnixEpochToDateTime(ulong epochTime) {
+            return new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(epochTime).ToLocalTime();
+        }
+
+        public static ulong DateTimeToUnixEpoch(DateTime dtime) {
+            return (ulong) (dtime.ToUniversalTime().Subtract(new DateTime(1970, 1, 1)).TotalSeconds);
+        }
+
         internal static string GetAppLabel() {
             var asm = Assembly.GetExecutingAssembly();
             var fvi = FileVersionInfo.GetVersionInfo(asm.Location);
