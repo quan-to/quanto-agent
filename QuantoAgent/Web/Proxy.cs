@@ -7,6 +7,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using QuantoAgent.Log;
 using System.Reflection;
+using QuantoAgent.Database;
 
 namespace QuantoAgent.Web {
     public class Proxy {
@@ -22,6 +23,7 @@ namespace QuantoAgent.Web {
             }
 
             var serverUrl = req.Headers.GetValues("serverUrl")[0];
+            var proxyToken = req.Headers.GetValues("proxyToken");
 
             if (method != "POST") {
                 return new RestResult(new ErrorObject {
@@ -34,6 +36,21 @@ namespace QuantoAgent.Web {
             Logger.Debug($"Received Proxy Request for server {serverUrl}");
 
             var httpContent = new StringContent(req.BodyData, Encoding.UTF8, "application/json");
+
+            if (proxyToken != null && proxyToken.Length > 0) {
+                var token = proxyToken[0];
+                if (TokenManager.CheckToken(token)) {
+                    var sigTask = GpgTools.SignData(Encoding.UTF8.GetBytes(req.BodyData));
+                    sigTask.Wait();
+                    httpContent.Headers.Add("signature", sigTask.Result);
+                } else {
+                    return new RestResult(new ErrorObject {
+                        ErrorCode = ErrorCodes.InvalidLoginInformation,
+                        Message = "The specified token is either invalid or expired.",
+                        ErrorField = "proxyToken"
+                    }.ToJSON(), MimeTypeMap.JSON, HttpStatusCode.Forbidden);
+                }
+            }
 
             httpContent.Headers.Add("X-Powered-By", Tools.GetAppLabel());
 

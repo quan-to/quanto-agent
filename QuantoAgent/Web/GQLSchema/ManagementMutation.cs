@@ -13,6 +13,22 @@ namespace QuantoAgent.Web.GQLSchema {
                                        new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "password" }
                                    ),
                                    resolve: ResolveLogin);
+            Field<StringGraphType>("AddPartnerKey",
+                          arguments: new QueryArguments(
+                                       new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "name" },
+                                       new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "email" },
+                                       new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "serverUrl" }
+                          ),
+                          resolve: ResolveAddPartnerKey);
+        }
+
+        public object ResolveAddPartnerKey(ResolveFieldContext<object> context) {
+            var ctx = (GContext)context.UserContext;
+            var name = context.GetArgument<String>("name");
+            var email = context.GetArgument<String>("email");
+            var serverUrl = context.GetArgument<String>("serverUrl");
+            // TODO
+            return "OK";
         }
 
         public object ResolveLogin(ResolveFieldContext<object> context) {
