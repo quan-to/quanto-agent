@@ -20,6 +20,11 @@ namespace QuantoAgent.Web.GQLSchema {
                                        new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "serverUrl" }
                           ),
                           resolve: ResolveAddPartnerKey);
+            Field<StringGraphType>("ChangePassword",
+                                   arguments: new QueryArguments(
+                                       new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "password" }
+                                      ),
+                                   resolve: ResolveChangePassword);
         }
 
         public object ResolveAddPartnerKey(ResolveFieldContext<object> context) {
@@ -47,6 +52,21 @@ namespace QuantoAgent.Web.GQLSchema {
             }
 
             return TokenManager.GenerateToken(user);
+        }
+
+        public object ResolveChangePassword(ResolveFieldContext<object> context) {
+            var ctx = (GContext)context.UserContext;
+            var user = ctx.User;
+            var newPass = context.GetArgument<String>("password");
+            if (user != null) {
+                UserManager.ChangePassword(user.UserName, newPass);
+                return "OK";
+            }
+            throw new ErrorObject {
+                ErrorCode = ErrorCodes.InvalidLoginInformation,
+                Message = "The specified token is either invalid or expired.",
+                ErrorField = "proxyToken"
+            }.ToException();
         }
     }
 }

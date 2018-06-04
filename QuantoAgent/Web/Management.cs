@@ -8,6 +8,10 @@ using GraphQL.Validation.Complexity;
 using Newtonsoft.Json;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using MimeTypes;
+using System.Net;
+using System.Text;
+using QuantoAgent.Database;
 
 namespace QuantoAgent.Web {
     public class Management {
@@ -26,10 +30,26 @@ namespace QuantoAgent.Web {
         }
 
         public async Task<RestResult> ProcessRequest(string path, string method, RestRequest req) {
+            DBUser user = null;
+            var proxyToken = req.Headers.GetValues("proxyToken");
+            if (proxyToken != null && proxyToken.Length > 0) {
+                var token = proxyToken[0];
+                if (TokenManager.CheckToken(token)) {
+                    var username = TokenManager.GetTokenUsername(token);
+                    user = UserManager.GetUser(username);
+                } else {
+                    return new RestResult(new ErrorObject {
+                        ErrorCode = ErrorCodes.InvalidLoginInformation,
+                        Message = "The specified token is either invalid or expired.",
+                        ErrorField = "proxyToken"
+                    }.ToJSON(), MimeTypeMap.JSON, HttpStatusCode.Forbidden);
+                }
+            }
 
             var context = new GContext {
                 Path = path,
                 Method = method,
+                User = user,
             };
 
             var body = JsonConvert.DeserializeObject<GraphQLBody>(req.BodyData);

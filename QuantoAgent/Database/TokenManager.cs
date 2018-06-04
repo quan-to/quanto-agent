@@ -35,6 +35,11 @@ namespace QuantoAgent.Database {
             return token != null && !token.IsExpired;
         }
 
+        public static string GetTokenUsername(string tokenValue) {
+            var token = valueToToken.ContainsKey(tokenValue) ? valueToToken[tokenValue] : null;
+            return token?.UserName;
+        }
+
         static void RefreshCaches() {
             valueToToken.Clear();
             currentTokens.ForEach(tkn => {
