@@ -1,14 +1,16 @@
 ﻿using System;
+using System.IO;
 using QuantoAgent.Exceptions;
 using QuantoAgent.Log;
 using SQLite;
 
 namespace QuantoAgent.Database {
     public static class UserManager {
-        const string FileName = "users.db";
+        static readonly string FileName = Path.Combine("db","users.db");
         static readonly SQLiteConnection conn;
 
         static UserManager() {
+            Directory.CreateDirectory("db");
             conn = new SQLiteConnection(FileName);
             var x = conn.GetTableInfo("DBUser");
             if (x.Count == 0) {

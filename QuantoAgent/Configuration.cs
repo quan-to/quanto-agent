@@ -8,9 +8,7 @@ namespace QuantoAgent {
         public static string SyslogFacility { get; private set; }
         public static string PrivateKeyFolder { get; private set; }
         public static string KeyPrefix { get; private set; }
-        public static string SKSServer { get; private set; }
         public static int HttpPort { get; private set; }
-        public static int MaxKeyRingCache { get; private set; }
         public static string MasterGPGKeyPath { get; private set; }
         public static string MasterGPGKeyPassword { get; private set; }
         public static int DefaultExpirationSeconds { get; private set; }
@@ -19,11 +17,7 @@ namespace QuantoAgent {
             SyslogServer = ConfigurationManager.Get("SYSLOG_IP", "127.0.0.1");
             SyslogFacility = ConfigurationManager.Get("SYSLOG_FACILITY", "LOG_USER");
             PrivateKeyFolder = ConfigurationManager.Get("PRIVATE_KEY_FOLDER", "keys");
-            SKSServer = ConfigurationManager.Get("SKS_SERVER", "http://pgp.mit.edu/");
             KeyPrefix = ConfigurationManager.Get("KEY_PREFIX", "");
-
-            var mkrc = ConfigurationManager.Get("MAX_KEYRING_CACHE_SIZE", "1000");
-            MaxKeyRingCache = int.Parse(mkrc);
 
             var hp = ConfigurationManager.Get("HTTP_PORT", "5100");
             HttpPort = int.Parse(hp);

@@ -1,10 +1,13 @@
 ﻿using System;
+using System.IO;
+
 namespace QuantoAgent.Database {
     public static class ConfigurationManager {
-        const string ConfigFileName = "config.db";
+        static readonly string ConfigFileName = Path.Combine("db","config.db");
         static readonly DatabaseConfig db;
 
         static ConfigurationManager() {
+            Directory.CreateDirectory("db");
             db = new DatabaseConfig(ConfigFileName);
         }
 
