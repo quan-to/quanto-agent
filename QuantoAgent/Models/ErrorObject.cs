@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace QuantoAgent.Models {
@@ -38,6 +39,12 @@ namespace QuantoAgent.Models {
 
         public string ToJSON() {
             return JsonConvert.SerializeObject(ToQ());
+        }
+
+        public string ToGraphQLJsonError() {
+            return JsonConvert.SerializeObject(new Dictionary<string, object> {
+                {"errors", new List<object> { ToQ() }}
+            });
         }
 
         public ErrorObjectQ ToQ() {

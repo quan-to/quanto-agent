@@ -42,7 +42,7 @@ namespace QuantoAgent.Web {
                         ErrorCode = ErrorCodes.InvalidLoginInformation,
                         Message = "The specified token is either invalid or expired.",
                         ErrorField = "proxyToken"
-                    }.ToJSON(), MimeTypeMap.JSON, HttpStatusCode.Forbidden);
+                    }.ToGraphQLJsonError(), MimeTypeMap.JSON, HttpStatusCode.Forbidden);
                 }
             }
 

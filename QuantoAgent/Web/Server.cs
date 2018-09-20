@@ -112,7 +112,7 @@ namespace QuantoAgent.Web {
                         ErrorCode = ErrorCodes.NotFound,
                         Message = "Endpoint not found",
                         ErrorField = "url"
-                    }.ToJSON(), MimeTypeMap.JSON, HttpStatusCode.NotFound);
+                    }.ToGraphQLJsonError(), MimeTypeMap.JSON, HttpStatusCode.NotFound);
             }
         }
     }

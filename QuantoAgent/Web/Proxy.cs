@@ -22,7 +22,7 @@ namespace QuantoAgent.Web {
                 }.ToJSON(), MimeTypeMap.JSON, HttpStatusCode.BadRequest);
             }
 
-            var serverUrl = req.Headers.GetValues("serverUrl")[0];
+            var serverUrl = req.Headers.GetValues("serverUrl")?[0];
             var proxyToken = req.Headers.GetValues("proxyToken");
 
             if (method != "POST") {
@@ -37,19 +37,27 @@ namespace QuantoAgent.Web {
 
             var httpContent = new StringContent(req.BodyData, Encoding.UTF8, "application/json");
 
-            if (proxyToken != null && proxyToken.Length > 0) {
-                var token = proxyToken[0];
-                if (TokenManager.CheckToken(token)) {
-                    var sigTask = GpgTools.SignData(Encoding.UTF8.GetBytes(req.BodyData));
-                    sigTask.Wait();
-                    httpContent.Headers.Add("signature", sigTask.Result);
-                } else {
-                    return new RestResult(new ErrorObject {
-                        ErrorCode = ErrorCodes.InvalidLoginInformation,
-                        Message = "The specified token is either invalid or expired.",
-                        ErrorField = "proxyToken"
-                    }.ToJSON(), MimeTypeMap.JSON, HttpStatusCode.Forbidden);
+            try {
+                if (proxyToken != null && proxyToken.Length > 0) {
+                    var token = proxyToken[0];
+                    if (TokenManager.CheckToken(token)) {
+                        var sigTask = GpgTools.SignData(Encoding.UTF8.GetBytes(req.BodyData));
+                        sigTask.Wait();
+                        httpContent.Headers.Add("signature", sigTask.Result);
+                    } else {
+                        return new RestResult(new ErrorObject {
+                            ErrorCode = ErrorCodes.InvalidLoginInformation,
+                            Message = "The specified token is either invalid or expired.",
+                            ErrorField = "proxyToken"
+                        }.ToGraphQLJsonError(), MimeTypeMap.JSON, HttpStatusCode.Forbidden);
+                    }
                 }
+            } catch (Exception) {
+                return new RestResult(new ErrorObject {
+                    ErrorCode = ErrorCodes.SealedStatus,
+                    ErrorField = "gpgkey",
+                    Message = "The GPG Key is currently encrypted. Please decrypt it first with Unseal"
+                }.ToGraphQLJsonError(), MimeTypeMap.JSON, HttpStatusCode.Forbidden);
             }
 
             httpContent.Headers.Add("X-Powered-By", Tools.GetAppLabel());

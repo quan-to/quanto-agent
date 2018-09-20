@@ -5,26 +5,28 @@ using System.Threading.Tasks;
 using Org.BouncyCastle.Bcpg;
 using Org.BouncyCastle.Bcpg.OpenPgp;
 using QuantoAgent.Log;
+using QuantoAgent.Models;
 
 namespace QuantoAgent {
     public static class GpgTools {
-        const string GpgToolsLog = "GpgTools";
+        private const string GpgToolsLog = "GpgTools";
 
-        static PgpSecretKey masterSecretKey;
-        static PgpPrivateKey masterPrivateKey;
+        static PgpSecretKey masterSecretKey = null;
+        static PgpPrivateKey masterPrivateKey = null;
 
         static GpgTools() {
             LoadKey();
         }
 
-        static void LoadKey() {
+        private static void LoadKey() {
             using (var s = File.OpenRead(Configuration.MasterGPGKeyPath)) {
                 masterSecretKey = ReadSecretKey(s);
             }
-            string fingerPrint = Tools.H16FP(masterSecretKey.PublicKey.GetFingerprint().ToHexString());
+            var fingerPrint = Tools.H16FP(masterSecretKey.PublicKey.GetFingerprint().ToHexString());
             Logger.Debug(GpgToolsLog, $"Loaded key {fingerPrint}");
-
-            UnlockKey(Configuration.MasterGPGKeyPassword);
+            if (!Configuration.ExternalKeyLoad) {
+                UnlockKey(Configuration.MasterGPGKeyPassword);
+            }
         }
 
         public static void UnlockKey(string password) {
@@ -40,9 +42,9 @@ namespace QuantoAgent {
             }
         }
 
-        static bool TestPrivateKey(PgpPublicKey publicKey, PgpPrivateKey privateKey) {
+        private static bool TestPrivateKey(PgpPublicKey publicKey, PgpPrivateKey privateKey) {
             try {
-                byte[] testData = Encoding.ASCII.GetBytes("testdata");
+                var testData = Encoding.ASCII.GetBytes("testdata");
                 var signature = "";
                 using (var ms = new MemoryStream()) {
                     var s = new ArmoredOutputStream(ms);
@@ -96,7 +98,7 @@ namespace QuantoAgent {
          * @throws IOException on a problem with using the input stream.
          * @throws PGPException if there is an issue parsing the input stream.
          */
-        internal static PgpSecretKey ReadSecretKey(Stream input) {
+        private static PgpSecretKey ReadSecretKey(Stream input) {
             var pgpSec = new PgpSecretKeyRingBundle(PgpUtilities.GetDecoderStream(input));
 
             foreach (PgpSecretKeyRing keyRing in pgpSec.GetKeyRings()) {
@@ -111,6 +113,13 @@ namespace QuantoAgent {
         }
 
         public static Task<string> SignData(byte[] data, HashAlgorithmTag hash = HashAlgorithmTag.Sha512) {
+            if (masterPrivateKey == null) {
+                throw new ErrorObject {
+                    ErrorCode = ErrorCodes.SealedStatus,
+                    ErrorField = "gpgkey",
+                    Message = "The GPG Key is currently encrypted. Please decrypt it first with Unseal"
+                }.ToException();
+            }
             return Task.Run(() => {
                 using (var ms = new MemoryStream()) {
                     var s = new ArmoredOutputStream(ms);
