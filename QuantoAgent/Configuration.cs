@@ -9,6 +9,7 @@ namespace QuantoAgent {
         public static string BootstrapUser { get; private set; }
         public static string BootstrapPass { get; private set; }
         public static bool ExternalKeyLoad { get; private set; }
+        public static bool EnableDefaultAdmin { get; private set; }
 
         #endregion
 
@@ -24,9 +25,10 @@ namespace QuantoAgent {
         static Configuration() {
             #region Bootstrap
 
-            BootstrapUser = Environment.GetEnvironmentVariable("BOOTSTRAP_USER");
-            BootstrapPass = Environment.GetEnvironmentVariable("BOOTSTRAP_PASS");
+            BootstrapUser = Environment.GetEnvironmentVariable("BOOTSTRAP_USER") ?? "";
+            BootstrapPass = Environment.GetEnvironmentVariable("BOOTSTRAP_PASS") ?? "";
             ExternalKeyLoad = Environment.GetEnvironmentVariable("EXTERNAL_KEYLOAD") == "true";
+            EnableDefaultAdmin = Environment.GetEnvironmentVariable("ENABLE_DEFAULT_ADMIN") == "true";
 
             #endregion
 

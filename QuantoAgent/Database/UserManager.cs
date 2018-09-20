@@ -17,9 +17,13 @@ namespace QuantoAgent.Database {
                 conn.CreateTable<DBUser>();
             }
 
-            if (GetUser("admin") == null) {
+            if (GetUser("admin") == null && Configuration.EnableDefaultAdmin) {
                 Logger.Log("UserManager", "Admin user does not exists. Creating default admin with password admin");
                 AddUser("Administrator", "admin", "admin");
+            }
+
+            if (!Configuration.EnableDefaultAdmin) {
+                Logger.Warn("UserManager", "ENABLE_DEFAULT_ADMIN != true. Will not create admin user automagically. Please use BOOTSTRAP_USER and BOOTSTRAP_PASS to initialize a default user.");
             }
 
             AppDomain.CurrentDomain.ProcessExit += (sender, e) => UserManagerDestructor();
