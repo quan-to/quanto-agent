@@ -1,9 +1,11 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Org.BouncyCastle.Bcpg;
 using Org.BouncyCastle.Bcpg.OpenPgp;
+using QuantoAgent.Exceptions;
 using QuantoAgent.Log;
 using QuantoAgent.Models;
 
@@ -11,8 +13,10 @@ namespace QuantoAgent {
     public static class GpgTools {
         private const string GpgToolsLog = "GpgTools";
 
-        static PgpSecretKey masterSecretKey = null;
+        private static PgpSecretKey masterSecretKey = null;
         static PgpPrivateKey masterPrivateKey = null;
+
+        private static string fingerPrint = null;
 
         static GpgTools() {
             LoadKey();
@@ -22,7 +26,8 @@ namespace QuantoAgent {
             using (var s = File.OpenRead(Configuration.MasterGPGKeyPath)) {
                 masterSecretKey = ReadSecretKey(s);
             }
-            var fingerPrint = Tools.H16FP(masterSecretKey.PublicKey.GetFingerprint().ToHexString());
+
+            fingerPrint = Tools.H16FP(masterSecretKey.PublicKey.GetFingerprint().ToHexString());
             Logger.Debug(GpgToolsLog, $"Loaded key {fingerPrint}");
             if (!Configuration.ExternalKeyLoad) {
                 UnlockKey(Configuration.MasterGPGKeyPassword);
@@ -35,6 +40,7 @@ namespace QuantoAgent {
                 if (!TestPrivateKey(masterSecretKey.PublicKey, dec)) {
                     throw new Exception("Invalid password for master key!");
                 }
+
                 masterPrivateKey = dec;
                 Logger.Log(GpgToolsLog, "Master Key Unlocked");
             } catch (Exception) {
@@ -73,9 +79,9 @@ namespace QuantoAgent {
                 var o = pgpFact.NextPgpObject();
                 if (o is PgpCompressedData c1) {
                     pgpFact = new PgpObjectFactory(c1.GetDataStream());
-                    p3 = (PgpSignatureList)pgpFact.NextPgpObject();
+                    p3 = (PgpSignatureList) pgpFact.NextPgpObject();
                 } else {
-                    p3 = (PgpSignatureList)o;
+                    p3 = (PgpSignatureList) o;
                 }
             }
 
@@ -83,6 +89,7 @@ namespace QuantoAgent {
             if (publicKey == null) {
                 publicKey = masterSecretKey.PublicKey;
             }
+
             sig.InitVerify(publicKey);
             sig.Update(data);
 
@@ -112,6 +119,86 @@ namespace QuantoAgent {
             throw new ArgumentException("Can't find signing key in key ring.");
         }
 
+        public static GPGDecryptedDataReturn Decrypt(string data, bool dataOnly = false) {
+            var str = data;
+            if (masterPrivateKey == null) {
+                throw new ErrorObject {
+                    ErrorCode = ErrorCodes.SealedStatus,
+                    ErrorField = "gpgkey",
+                    Message = "The GPG Key is currently encrypted. Please decrypt it first with Unseal"
+                }.ToException();
+            }
+
+            if (dataOnly) {
+                str = Tools.Raw2AsciiArmored(Convert.FromBase64String(data));
+            }
+           
+            using (var stream = PgpUtilities.GetDecoderStream(Tools.GenerateStreamFromString(str))) {
+                var pgpF = new PgpObjectFactory(stream);
+                var o = pgpF.NextPgpObject();
+                if (!(o is PgpEncryptedDataList enc)) {
+                    enc = (PgpEncryptedDataList) pgpF.NextPgpObject();
+                }
+
+                var pbe = 
+                    (
+                        from PgpPublicKeyEncryptedData pked in enc.GetEncryptedDataObjects() 
+                        let keyId = pked.KeyId.ToString("X").ToUpper() 
+                        let fp = Tools.H16FP(keyId) 
+                        where fp == fingerPrint select pked
+                     ).FirstOrDefault();
+
+                if (pbe == null) {
+                    throw new ErrorObject {
+                        ErrorCode = ErrorCodes.NotFound,
+                        ErrorField = "gpgkey",
+                        Message = $"Cannot find {fingerPrint} in list of encrypted payload."
+                    }.ToException();
+                }
+
+                var clear = pbe.GetDataStream(masterPrivateKey);
+                var plainFact = new PgpObjectFactory(clear);
+                var message = plainFact.NextPgpObject();
+                var outData = new GPGDecryptedDataReturn {
+                    FingerPrint = fingerPrint,
+                };
+                
+                if (message is PgpCompressedData cData) {
+                    var pgpFact = new PgpObjectFactory(cData.GetDataStream());
+                    message = pgpFact.NextPgpObject();
+                }
+
+                switch (message) {
+                    case PgpLiteralData ld:
+                        outData.Filename = ld.FileName;
+                        var iss = ld.GetInputStream();
+                        var buffer = new byte[16 * 1024];
+                        using (var ms = new MemoryStream()) {
+                            int read;
+                            while ((read = iss.Read(buffer, 0, buffer.Length)) > 0) {
+                                ms.Write(buffer, 0, read);
+                            }
+
+                            outData.Base64Data = Convert.ToBase64String(ms.ToArray());
+                        }
+
+                        break;
+                    case PgpOnePassSignatureList _:
+                        throw new PgpException("Encrypted message contains a signed message - not literal data.");
+                    default:
+                        throw new PgpException("Message is not a simple encrypted file - type unknown.");
+                }
+
+                outData.IsIntegrityProtected = pbe.IsIntegrityProtected();
+
+                if (outData.IsIntegrityProtected) {
+                    outData.IsIntegrityOK = pbe.Verify();
+                }
+
+                return outData;
+            }
+        }
+
         public static Task<string> SignData(byte[] data, HashAlgorithmTag hash = HashAlgorithmTag.Sha512) {
             if (masterPrivateKey == null) {
                 throw new ErrorObject {
@@ -120,6 +207,7 @@ namespace QuantoAgent {
                     Message = "The GPG Key is currently encrypted. Please decrypt it first with Unseal"
                 }.ToException();
             }
+
             return Task.Run(() => {
                 using (var ms = new MemoryStream()) {
                     var s = new ArmoredOutputStream(ms);
@@ -130,7 +218,8 @@ namespace QuantoAgent {
                         sGen.Generate().Encode(bOut);
                         s.Close();
                         ms.Seek(0, SeekOrigin.Begin);
-                        return Tools.GPG2Quanto(Encoding.UTF8.GetString(ms.ToArray()), masterSecretKey.PublicKey.GetFingerprint().ToHexString(), hash);
+                        return Tools.GPG2Quanto(Encoding.UTF8.GetString(ms.ToArray()),
+                            masterSecretKey.PublicKey.GetFingerprint().ToHexString(), hash);
                     }
                 }
             });

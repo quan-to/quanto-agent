@@ -1,30 +1,29 @@
-﻿using GraphQL.Execution;
+﻿using System.Collections.Generic;
+using System.Net;
+using System.Threading.Tasks;
 using GraphQL;
-using QuantoAgent.Models;
-
-using QuantoAgent.Web.GQLSchema;
+using GraphQL.Execution;
 using GraphQL.Validation;
 using GraphQL.Validation.Complexity;
-using Newtonsoft.Json;
-using System.Threading.Tasks;
-using System.Collections.Generic;
 using MimeTypes;
-using System.Net;
-using System.Text;
+using Newtonsoft.Json;
 using QuantoAgent.Database;
+using QuantoAgent.Models;
+using QuantoAgent.Web.GQLSchema;
 
 namespace QuantoAgent.Web {
-    public class Management {
-
+    public class ToolsGQL {
+        
         readonly ISimpleContainer services;
         readonly IDocumentExecuter executer;
-        readonly ManagementSchema schema;
+        readonly ToolsSchema schema;
 
-        public Management() {
+        public ToolsGQL() {
             services = new SimpleContainer();
-            services.Register<ManagementQuery>();
-            services.Singleton(new ManagementSchema(new FuncDependencyResolver(services.Get)));
-            schema = services.Get<ManagementSchema>();
+            services.Register<ToolsQuery>();
+            services.Register<ToolsMutation>();
+            services.Singleton(new ToolsSchema(new FuncDependencyResolver(services.Get)));
+            schema = services.Get<ToolsSchema>();
 
             executer = new DocumentExecuter(new GraphQLDocumentBuilder(), new DocumentValidator(), new ComplexityAnalyzer());
         }

@@ -8,30 +8,28 @@ using QuantoAgent.Models;
 
 namespace QuantoAgent.Web {
     public class Server {
-        public int Port { get; private set; }
+        private int Port { get; set; }
 
         readonly HttpListener listener = new HttpListener();
         Thread listenerThread;
         bool running;
-        readonly Proxy proxy;
         readonly Management management;
-        protected GraphiQL graphiql;
+        readonly ToolsGQL toolsGql;
 
         public Server(int port = 4040) {
             Port = port;
             listener.Prefixes.Add($"http://*:{port}/");
             listenerThread = null;
             running = false;
-            proxy = new Proxy();
             management = new Management();
-            graphiql = new GraphiQL();
+            toolsGql = new ToolsGQL();
         }
 
         public void Start() {
             if (listenerThread != null) {
                 Logger.Log("HTTP Server", "Starting HTTP Listener");
                 listener.Start();
-                listenerThread = new Thread(new ThreadStart(ListenerProcessor)) {
+                listenerThread = new Thread(ListenerProcessor) {
                     IsBackground = true
                 };
                 running = true;
@@ -49,13 +47,12 @@ namespace QuantoAgent.Web {
 
         public void Stop() {
             running = false;
-            if (listenerThread != null) {
-                listenerThread.Join();
-                listenerThread = null;
-            }
+            if (listenerThread == null) return;
+            listenerThread.Join();
+            listenerThread = null;
         }
 
-        void ListenerProcessor() {
+        private void ListenerProcessor() {
             while (running) {
                 try {
                     var context = listener.GetContext();
@@ -67,11 +64,11 @@ namespace QuantoAgent.Web {
             listener.Stop();
         }
 
-        void HandleRequest(object state) {
+        private void HandleRequest(object state) {
             var ctx = state as HttpListenerContext;
             try {
                 // Logger.Debug("HTTP Server", $"{ctx.Request.HttpMethod} - {ctx.Request.RawUrl}");
-                RestResult ret = ProcessHttpCalls(ctx.Request);
+                var ret = ProcessHttpCalls(ctx.Request);
                 ctx.Response.ContentType = ret.ContentType;
                 ctx.Response.StatusCode = (int)ret.StatusCode;
                 ctx.Response.ContentLength64 = ret.Result.Length;
@@ -83,15 +80,15 @@ namespace QuantoAgent.Web {
             }
         }
 
-        RestResult ProcessHttpCalls(HttpListenerRequest request) {
+        private RestResult ProcessHttpCalls(HttpListenerRequest request) {
             var proc = AsyncProcess(request);
             proc.Wait();
             return proc.Result;
         }
 
-        async Task<RestResult> AsyncProcess(HttpListenerRequest request) {
-            string[] ePath = request.Url.AbsolutePath.Split(new char[] { '/' }, 2, StringSplitOptions.RemoveEmptyEntries);
-            RestRequest req = new RestRequest(request);
+        private async Task<RestResult> AsyncProcess(HttpListenerRequest request) {
+            var ePath = request.Url.AbsolutePath.Split(new [] { '/' }, 2, StringSplitOptions.RemoveEmptyEntries);
+            var req = new RestRequest(request);
             if (ePath.Length == 0) {
                 return new RestResult(new ErrorObject {
                     ErrorCode = ErrorCodes.NotFound,
@@ -99,14 +96,15 @@ namespace QuantoAgent.Web {
                     ErrorField = "url"
                 }.ToJSON(), MimeTypeMap.JSON, HttpStatusCode.NotFound);
             }
-            string path = ePath.Length > 1 ? "/" + ePath[1] : "/";
-            string method = request.HttpMethod;
-            string app = ePath[0];
+            var path = ePath.Length > 1 ? "/" + ePath[1] : "/";
+            var method = request.HttpMethod;
+            var app = ePath[0];
 
             switch (app) {
-                case "graphiql": return graphiql.ProcessRequest(path, method, req);
-                case "graphql": return await proxy.ProcessRequest(path, method, req);
+                case "graphiql": return GraphiQL.ProcessRequest(path, method, req);
+                case "graphql": return await Proxy.ProcessRequest(path, method, req);
                 case "admin": return await management.ProcessRequest(path, method, req);
+                case "tools": return await toolsGql.ProcessRequest(path, method, req);
                 default:
                     return new RestResult(new ErrorObject {
                         ErrorCode = ErrorCodes.NotFound,

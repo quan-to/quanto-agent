@@ -10,10 +10,10 @@ using System.Reflection;
 using QuantoAgent.Database;
 
 namespace QuantoAgent.Web {
-    public class Proxy {
-        static readonly HttpClient client = new HttpClient();
+    public static class Proxy {
+        private static readonly HttpClient Client = new HttpClient();
 
-        public async Task<RestResult> ProcessRequest(string path, string method, RestRequest req) {
+        public static async Task<RestResult> ProcessRequest(string path, string method, RestRequest req) {
             if (req.Headers.GetValues("serverUrl") == null) {
                 return new RestResult(new ErrorObject {
                     ErrorCode = ErrorCodes.InvalidFieldData,
@@ -62,7 +62,7 @@ namespace QuantoAgent.Web {
 
             httpContent.Headers.Add("X-Powered-By", Tools.GetAppLabel());
 
-            var response = await client.PostAsync(serverUrl, httpContent);
+            var response = await Client.PostAsync(serverUrl, httpContent);
             var result = await response.Content.ReadAsStringAsync();
 
             return new RestResult(result, MimeTypeMap.JSON);

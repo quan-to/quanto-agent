@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using QuantoAgent.Exceptions;
 using QuantoAgent.Log;
 using SQLite;
@@ -78,7 +79,7 @@ namespace QuantoAgent.Database {
 
         static DBUser _GetUser(string username) {
             var res = conn.Table<DBUser>().Where(a => a.UserName == username);
-            return res.Count() > 0 ? res.First() : null;
+            return res.Any() ? res.First() : null;
         }
 
         static void UserManagerDestructor() {

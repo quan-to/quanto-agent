@@ -10,7 +10,7 @@ namespace QuantoAgent {
     public static class Tools {
         public static bool IsLinux {
             get {
-                int p = (int)Environment.OSVersion.Platform;
+                var p = (int)Environment.OSVersion.Platform;
                 return (p == 4) || (p == 6) || (p == 128);
             }
         }
@@ -34,11 +34,14 @@ namespace QuantoAgent {
             byte[] data = null;
             var assembly = Assembly.GetExecutingAssembly();
             try {
-                using (Stream stream = assembly.GetManifestResourceStream($"QuantoAgent.{filename}")) {
+                using (var stream = assembly.GetManifestResourceStream($"QuantoAgent.{filename}")) {
+                    if (stream == null) {
+                        throw new Exception();
+                    }
                     data = new byte[stream.Length];
-                    int position = 0;
+                    var position = 0;
                     while (position < stream.Length) {
-                        int chunkSize = stream.Length - position > 4096 ? 4096 : (int)(stream.Length - position);
+                        var chunkSize = stream.Length - position > 4096 ? 4096 : (int)(stream.Length - position);
                         stream.Read(data, position, chunkSize);
                         position += chunkSize;
                     }
@@ -49,15 +52,25 @@ namespace QuantoAgent {
 
             return data;
         }
+        
+        public static string Raw2AsciiArmored(byte[] b) {
+            var encOut = new MemoryStream();
+            var s = new ArmoredOutputStream(encOut);
+            s.Write(b);
+            s.Close();
+            encOut.Seek(0, SeekOrigin.Begin);
+            var reader = new StreamReader(encOut);
+            return reader.ReadToEnd();
+        }
 
-        public static String H16FP(string fingerPrint) {
+        public static string H16FP(string fingerPrint) {
             if (fingerPrint.Length < 16) {
                 throw new ArgumentException("FingerPrint string has less than 16 chars!");
             }
             return fingerPrint.Substring(fingerPrint.Length - 16, 16);
         }
 
-        public static String H8FP(string fingerPrint) {
+        public static string H8FP(string fingerPrint) {
             if (fingerPrint.Length < 8) {
                 throw new ArgumentException("FingerPrint string has less than 8 chars!");
             }
@@ -65,15 +78,15 @@ namespace QuantoAgent {
         }
 
         public static string ToHexString(this byte[] ba) {
-            StringBuilder hex = new StringBuilder(ba.Length * 2);
-            foreach (byte b in ba)
+            var hex = new StringBuilder(ba.Length * 2);
+            foreach (var b in ba)
                 hex.AppendFormat("{0:x2}", b);
             return hex.ToString().ToUpper();
         }
 
         public static Stream GenerateStreamFromByteArray(byte[] data) {
-            MemoryStream stream = new MemoryStream();
-            StreamWriter writer = new StreamWriter(stream);
+            var stream = new MemoryStream();
+            var writer = new StreamWriter(stream);
             writer.Write(data);
             writer.Flush();
             stream.Seek(0, SeekOrigin.Begin);
@@ -81,21 +94,21 @@ namespace QuantoAgent {
         }
 
         public static Stream GenerateStreamFromString(string s) {
-            MemoryStream stream = new MemoryStream();
-            StreamWriter writer = new StreamWriter(stream);
+            var stream = new MemoryStream();
+            var writer = new StreamWriter(stream);
             writer.Write(s);
             writer.Flush();
             stream.Seek(0, SeekOrigin.Begin);
             return stream;
         }
 
-        public static String GPG2Quanto(string signature, string fingerPrint, HashAlgorithmTag hash) {
-            string hashName = hash.ToString().ToUpper();
-            string cutSig = "";
+        public static string GPG2Quanto(string signature, string fingerPrint, HashAlgorithmTag hash) {
+            var hashName = hash.ToString().ToUpper();
+            var cutSig = "";
 
-            string[] s = signature.Trim().Split('\n');
+            var s = signature.Trim().Split('\n');
 
-            for (int i = 2; i < s.Length - 1; i++) {
+            for (var i = 2; i < s.Length - 1; i++) {
                 cutSig += s[i];
             }
 

@@ -7,8 +7,8 @@ using QuantoAgent.Models;
 
 namespace QuantoAgent.Web {
     public class GraphiQL {
-        public RestResult ProcessRequest(string path, string method, RestRequest req) {
-            string bundleFile = path.Replace("/", ".").Substring(1);
+        public static RestResult ProcessRequest(string path, string method, RestRequest req) {
+            var bundleFile = path.Replace("/", ".").Substring(1);
             if (bundleFile.Length == 0) {
                 bundleFile = "index.html";
             }
